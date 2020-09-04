@@ -22,10 +22,10 @@ int main(void)
 {
     Sys_Init(); // This always goes at the top of main (defined in init.c)
 
-    char choice;
-    char counter = 1;
-    char arr[13];
-    int i = 1;
+    char choice = 0;
+    //char counter = 1;
+    //char arr[13];
+   // int i = 1;
 
     printf("\033[2J\033[;H"); // Erase screen & move cursor to home position
     fflush(stdout); // Need to flush stdout after using printf that doesn't end in \n
@@ -35,12 +35,17 @@ int main(void)
 
     printf("\033[12;H\033[s");
     fflush(stdout);
+    //sets scrolling window for lines 12-24
+    printf("\033[12;24r");
+    fflush(stdout);
+
     printf("\033[;H");
     fflush(stdout);
 
     printf("\033[2;25H"); //Moves Cursor to Center Text
     fflush(stdout);
     printf("PRESS <ESC> OR <CTRL>+[ TO QUIT\r\n\n");
+
 
 
     while(1)
@@ -71,6 +76,20 @@ int main(void)
       		fflush(stdout);
     	}
 
+    	else{
+   			printf("\033[u");
+    		fflush(stdout);
+    		printf("\033[33;5mThe keyboard character $%x is \033[4m'not printable'\033[24m.\033[25m",choice);
+    		fflush(stdout);
+    		printf("\033[u");
+    		fflush(stdout);
+   			printf("\033D");
+   			fflush(stdout);
+
+   			printf("\033[s");
+   			fflush(stdout);
+    	}
+    	/*
     	else{
     		printf("\a"); //Should have terminal beep
     		if (counter <14)
@@ -113,7 +132,7 @@ int main(void)
 
     		}
 
-    	}
+    	}*/
 
 
 	}
