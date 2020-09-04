@@ -77,6 +77,8 @@ int main(void)
     	}
 
     	else{
+		printf("\a"); //Should have terminal beep
+    		fflush(stdout);
    			printf("\033[u");
     		fflush(stdout);
     		printf("\033[33;5mThe keyboard character $%x is \033[4m'not printable'\033[24m.\033[25m",choice);
