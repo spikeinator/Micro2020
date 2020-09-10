@@ -20,9 +20,10 @@ void printmap(); //Prints map for testing
 
 int i = 0;
 int j = 0;
-int x;
-int y;
+int posrow;
+int poscol;
 char choice;
+int win = 0;
 int map[12][12]; //Array to keep track of player and walls
 //------------------------------------------------------------------------------------
 // MAIN Routine
@@ -30,8 +31,23 @@ int map[12][12]; //Array to keep track of player and walls
 int main(void)
 {
 	Sys_Init();
+	GPIO_InitTypeDef pinconfig;
 
-	printf("\033[2J\033[;H"); // Erase screen & move cursor to home position
+    //Sets up LD2 on GPIOJ Pin 5
+    __HAL_RCC_GPIOJ_CLK_ENABLE();
+    pinconfig.Pin = GPIO_PIN_5;
+    pinconfig.Mode = GPIO_MODE_OUTPUT_PP;
+    pinconfig.Speed = GPIO_SPEED_FAST;
+    HAL_GPIO_Init(GPIOJ,&pinconfig);
+
+    //Configure Blue Pushbutton as an input
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    pinconfig.Pin = GPIO_PIN_0;
+    pinconfig.Mode = GPIO_MODE_INPUT;
+    pinconfig.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOA,&pinconfig);
+
+   	printf("\033[2J\033[;H"); // Erase screen & move cursor to home position
 	fflush(stdout);
 
 	printf("\033[0m");
@@ -39,63 +55,136 @@ int main(void)
 	printf("\033[s");
 	fflush(stdout);
 
-	setupmazeframe();
-	setupmazewalls();
-	printmap();
+	setupmazeframe(); //Generates walls around maze
+	setupmazewalls(); //Generates walls in maze
+	printmap(); //Displays map of maze
 
-	printf("\033[2;2H\033[s\033[46m \033[0m\033[15;15H");
+	printf("\033[2;2H\033[s\033[46m \033[0m\033[15;15H"); //Puts player in maze
 	fflush(stdout);
+
+	//Sets player position in the map
+	posrow = 1;
+	poscol = 1;
+	map[posrow][poscol] = 9;
+	printmap();
 
 	while(1)
 	{
+		//Resets the maze
+		if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)){
+			win = 0;
+			HAL_GPIO_WritePin(GPIOJ,GPIO_PIN_5,GPIO_PIN_RESET);
+			map[posrow][poscol] = 0;
+			posrow=1;
+			poscol=1;
+			map[posrow][poscol] = 9;
+
+			printf("\033[u \033");
+			fflush(stdout);
+
+			printf("\033[12;11H");
+			fflush(stdout);
+			printf("\033[43m \033[0m");
+			fflush(stdout);
+
+			printf("\033[2;2H\033[s\033[46m \033[0m\033[15;15H"); //Puts player in maze
+			fflush(stdout);
+		}
+
 		choice = getchar();
 
 		//check for "w" input and move player up
-		if((choice == 119) || (choice == 87)){
-			printf("\033[u \033[D");
-			fflush(stdout);
+		if(((choice == 119) || (choice == 87)) && win == 0){
+			if(map[posrow-1][poscol] == 0){
+				printf("\033[u \033[D");
+				fflush(stdout);
 
-			printf("\033[A\033[s\033[46m \033[0m");
-			fflush(stdout);
+				printf("\033[A\033[s\033[46m \033[0m");
+				fflush(stdout);
 
-			printf("\033[15;15H");
-			fflush(stdout);
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				posrow = posrow - 1;
+				map[posrow][poscol] = 9;
+				printmap();
+			}
 		}
 
 		//check for "d" input and move player right
-		else if((choice == 68) || (choice == 100)){
-			printf("\033[u \033[D");
-			fflush(stdout);
+		else if(((choice == 68) || (choice == 100)) && win == 0){
+			if(map[posrow][poscol+1] == 0){
+				printf("\033[u \033[D");
+				fflush(stdout);
 
-			printf("\033[C\033[s\033[46m \033[0m");
-			fflush(stdout);
+				printf("\033[C\033[s\033[46m \033[0m");
+				fflush(stdout);
 
-			printf("\033[15;15H");
-			fflush(stdout);
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				poscol = poscol + 1;
+				map[posrow][poscol] = 9;
+				printmap();
+			}
 		}
 
 		//Check for "s" input and move player down
-		else if((choice == 83) || (choice == 115)){
-			printf("\033[u \033[D");
-			fflush(stdout);
+		else if(((choice == 83) || (choice == 115)) && win == 0){
+			if(map[posrow+1][poscol] == 0){
+				printf("\033[u \033[D");
+				fflush(stdout);
 
-			printf("\033[B\033[s\033[46m \033[0m");
-			fflush(stdout);
+				printf("\033[B\033[s\033[46m \033[0m");
+				fflush(stdout);
 
-			printf("\033[15;15H");
-			fflush(stdout);
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				posrow = posrow + 1;
+				map[posrow][poscol] = 9;
+				printmap();
+			}
+
+			else if(map[posrow+1][poscol] == 2){
+				printf("\033[u \033[D");
+				fflush(stdout);
+
+				printf("\033[B\033[s\033[46m \033[0m");
+				fflush(stdout);
+
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				posrow = posrow + 1;
+				map[posrow][poscol] = 9;
+				printmap();
+				win = 1;
+			    HAL_GPIO_WritePin(GPIOJ,GPIO_PIN_5,GPIO_PIN_SET);
+			}
 		}
 
 		//Check for "a" input and move player left
-		else if((choice == 65) || (choice == 97)){
-			printf("\033[u \033[D");
-			fflush(stdout);
+		else if(((choice == 65) || (choice == 97)) && win == 0){
+			if(map[posrow][poscol-1] == 0){
+				printf("\033[u \033[D");
+				fflush(stdout);
 
-			printf("\033[D\033[s\033[46m \033[0m");
-			fflush(stdout);
+				printf("\033[D\033[s\033[46m \033[0m");
+				fflush(stdout);
 
-			printf("\033[15;15H");
-			fflush(stdout);
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				poscol = poscol - 1;
+				map[posrow][poscol] = 9;
+				printmap();
+			}
 		}
 
 	}
