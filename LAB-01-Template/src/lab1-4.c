@@ -71,6 +71,38 @@ int main(void)
 	while(1)
 	{
 		//Resets the maze
+		/*
+		i = 0;
+		while(i<10000){
+			if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)){
+				win = 0;
+				HAL_GPIO_WritePin(GPIOJ,GPIO_PIN_5,GPIO_PIN_RESET);
+				map[posrow][poscol] = 0;
+				posrow=1;
+				poscol=1;
+				map[posrow][poscol] = 9;
+
+				printf("\033[u \033");
+				fflush(stdout);
+
+				printf("\033[12;11H");
+				fflush(stdout);
+				printf("\033[43m \033[0m");
+				fflush(stdout);
+
+				map[11][10] = 2;
+
+				printf("\033[2;2H\033[s\033[46m \033[0m\033[15;15H"); //Puts player in maze
+				fflush(stdout);
+			}
+			i++;
+
+		}*/
+
+
+		choice = getchar();
+
+		//Resets the maze if holding pushbutton
 		if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)){
 			win = 0;
 			HAL_GPIO_WritePin(GPIOJ,GPIO_PIN_5,GPIO_PIN_RESET);
@@ -87,11 +119,11 @@ int main(void)
 			printf("\033[43m \033[0m");
 			fflush(stdout);
 
+			map[11][10] = 2;
+
 			printf("\033[2;2H\033[s\033[46m \033[0m\033[15;15H"); //Puts player in maze
 			fflush(stdout);
 		}
-
-		choice = getchar();
 
 		//check for "w" input and move player up
 		if(((choice == 119) || (choice == 87)) && win == 0){
@@ -109,6 +141,24 @@ int main(void)
 				posrow = posrow - 1;
 				map[posrow][poscol] = 9;
 				printmap();
+			}
+
+			else if(map[posrow+1][poscol] == 2){
+				printf("\033[u \033[D");
+				fflush(stdout);
+
+				printf("\033[B\033[s\033[46m \033[0m");
+				fflush(stdout);
+
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				posrow = posrow + 1;
+				map[posrow][poscol] = 9;
+				printmap();
+				win = 1;
+			    HAL_GPIO_WritePin(GPIOJ,GPIO_PIN_5,GPIO_PIN_SET);
 			}
 		}
 
@@ -128,6 +178,24 @@ int main(void)
 				poscol = poscol + 1;
 				map[posrow][poscol] = 9;
 				printmap();
+			}
+
+			else if(map[posrow+1][poscol] == 2){
+				printf("\033[u \033[D");
+				fflush(stdout);
+
+				printf("\033[B\033[s\033[46m \033[0m");
+				fflush(stdout);
+
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				posrow = posrow + 1;
+				map[posrow][poscol] = 9;
+				printmap();
+				win = 1;
+			    HAL_GPIO_WritePin(GPIOJ,GPIO_PIN_5,GPIO_PIN_SET);
 			}
 		}
 
@@ -184,6 +252,24 @@ int main(void)
 				poscol = poscol - 1;
 				map[posrow][poscol] = 9;
 				printmap();
+			}
+
+			else if(map[posrow+1][poscol] == 2){
+				printf("\033[u \033[D");
+				fflush(stdout);
+
+				printf("\033[B\033[s\033[46m \033[0m");
+				fflush(stdout);
+
+				printf("\033[15;15H");
+				fflush(stdout);
+
+				map[posrow][poscol] = 0;
+				posrow = posrow + 1;
+				map[posrow][poscol] = 9;
+				printmap();
+				win = 1;
+			    HAL_GPIO_WritePin(GPIOJ,GPIO_PIN_5,GPIO_PIN_SET);
 			}
 		}
 
