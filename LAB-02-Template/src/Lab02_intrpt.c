@@ -9,7 +9,7 @@
 //
 // -- Imports ---------------
 //
-#include "init.h"
+/*#include "init.h"
 
 //
 //
@@ -171,3 +171,4 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 // void HAL_TIMEx_BreakCallback(TIM_HandleTypeDef *htim){};
 // void HAL_TIMEx_CommutationCallback(TIM_HandleTypeDef *htim){};
+//*/
