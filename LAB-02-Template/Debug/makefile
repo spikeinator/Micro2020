@@ -47,8 +47,8 @@ LAB-02-Template.bin \
 all: LAB-02-Template.elf secondary-outputs
 
 # Tool invocations
-LAB-02-Template.elf: $(OBJS) $(USER_OBJS) C:\Users\peckn\STM32CubeIDE\workspace_1.4.0\LAB-02-Template\LinkerScript.ld
-	arm-none-eabi-gcc -o "LAB-02-Template.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\peckn\STM32CubeIDE\workspace_1.4.0\LAB-02-Template\LinkerScript.ld" --specs=nosys.specs -Wl,-Map="LAB-02-Template.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+LAB-02-Template.elf: $(OBJS) $(USER_OBJS) C:\Users\broder\STM32CubeIDE\workspace_1.4.0\LAB-02-Template\LinkerScript.ld
+	arm-none-eabi-gcc -o "LAB-02-Template.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\broder\STM32CubeIDE\workspace_1.4.0\LAB-02-Template\LinkerScript.ld" --specs=nosys.specs -Wl,-Map="LAB-02-Template.map" -Wl,--gc-sections -static "-u_printf_float" --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

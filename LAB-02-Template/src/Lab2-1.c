@@ -4,7 +4,7 @@
  *  Created on: Sep 17, 2020
  *      Author: peckn
  */
-#include "init.h"
+/*#include "init.h"
 #include "stm32f769xx.h"
 
 
@@ -12,6 +12,7 @@
 
 
 int trigger = 0;
+int HALtrigger=0;
 
 int main(){
 	Sys_Init();
@@ -23,9 +24,20 @@ int main(){
     GPIOC->PUPDR &= ~GPIO_PUPDR_PUPDR8_1;//turn on pull up resistor
     GPIOC->PUPDR |= GPIO_PUPDR_PUPDR8_0;
 
+    //D4 pin J0
+    GPIO_InitTypeDef pinconfig;
+    __HAL_RCC_GPIOJ_CLK_ENABLE();
+    pinconfig.Pin = GPIO_PIN_0;
+    pinconfig.Mode = GPIO_MODE_IT_RISING;
+    pinconfig.Pull = GPIO_PULLDOWN;
+    HAL_GPIO_Init(GPIOJ,&pinconfig);
+
+
+
     RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	asm ("nop");
 	asm ("nop");
+	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI8_PC;
 	//SYSCFG->EXTICR &= ~SYSCFG_EXTICR3_EXTI8_2;
@@ -52,6 +64,10 @@ int main(){
 			trigger = 0;
 			printf("Register Button Pressed\r\n");
 		}
+		if(HALtrigger){
+			HALtrigger=0;
+			printf("HAL Button Pressed\r\n");
+		}
 	}
 }
 
@@ -66,3 +82,10 @@ void EXTI9_5_IRQHandler() {
 	trigger = 1;
 
 }
+void EXTI0_IRQHandler(){
+	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+}
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	HALtrigger=1;
+}*/
+
