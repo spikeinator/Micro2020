@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 void GetVersion();
+void ChangeID();
+void reset();
 char input[1];
 char output[1];
 char UartData[1];
@@ -36,7 +38,7 @@ void configureSPI()
 	spi2.Init.DataSize = SPI_DATASIZE_8BIT; //Set data to 8 bits
 	spi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE; //Disable CRC
 	spi2.Init.Direction = SPI_DIRECTION_2LINES;
-	spi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+	spi2.Init.CLKPhase = SPI_PHASE_2EDGE;
 	spi2.Init.CLKPolarity = SPI_POLARITY_LOW;
 	spi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
 	spi2.Init.NSS = SPI_NSS_SOFT;
@@ -99,7 +101,8 @@ int main(void)
 	//HAL_SPI_TransmitReceive(&spi2,(uint8_t*)input,(uint8_t*)output, 1,100);
 	//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
 
-	GetVersion();
+	//GetVersion();
+	ChangeID();
 	printf("Hit <ESC> to open the command window");
 	fflush(stdout);
 
@@ -142,11 +145,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 				//get temperature
 			}
 			else if(UartData[0]==34){
-				//change ID
+				//ChangeID();
 			}
-			else if(UartData[0]==35){
 				//reset slave terminal
-			}
+
 		}
 	}
 }
@@ -173,6 +175,57 @@ void GetVersion(){
 	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
 	printf("\033[2J\033[;H STaTs Version number %x %x\r\n",version[0],version [1]);
 	fflush(stdout);
-	printf("hello");
+}
+
+void ChangeID(){
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
+	input[0]=2;
+	HAL_Delay(10);
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+
+	input[0]=0x80;
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+	HAL_Delay(10);
+
+	input[0]=9;
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+
+	input[0]=12;
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+	HAL_Delay(10);
+
+	input[0]=9;
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+	HAL_SPI_Receive(&spi2, (uint8_t*)output,1 ,100);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+	HAL_Delay(10);
+
+	printf("\033[2J\033[;H Device ID %x\r\n",output[0]);
 	fflush(stdout);
+}
+
+void reset(){
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
+	input[0]=2;
+	HAL_Delay(10);
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+
+	input[0]=0x08;
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+	HAL_Delay(10);
 }
