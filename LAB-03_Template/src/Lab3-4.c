@@ -103,6 +103,7 @@ int main(void)
 
 	//GetVersion();
 	ChangeID();
+	//reset();
 	printf("Hit <ESC> to open the command window");
 	fflush(stdout);
 
@@ -178,6 +179,19 @@ void GetVersion(){
 }
 
 void ChangeID(){
+	input[0]=9;
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_SPI_Transmit(&spi2, (uint8_t *)input, 1,100);
+	HAL_Delay(10);
+	HAL_SPI_Receive(&spi2, (uint8_t*)output,1 ,100);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+	HAL_Delay(10);
+
+	printf("\033[2J\033[;H Old Device ID %x\r\n",output[0]);
+	fflush(stdout);
+
 	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
 	input[0]=2;
 	HAL_Delay(10);
@@ -212,7 +226,7 @@ void ChangeID(){
 	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
 	HAL_Delay(10);
 
-	printf("\033[2J\033[;H Device ID %x\r\n",output[0]);
+	printf("New Device ID %x\r\n",output[0]);
 	fflush(stdout);
 }
 
