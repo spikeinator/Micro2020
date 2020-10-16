@@ -27,8 +27,6 @@ int main(void) {
 
 	UartData[0]=113;
 	HAL_UART_Transmit_IT(&USB_UART, (uint8_t*) erase_home, strlen((const char*)erase_home));
-
-
 	HAL_UART_Transmit_IT(&USB_UART, (uint8_t*) welcome, strlen((const char*)welcome));
 	while(1){
 		if(trigger_break==1){
