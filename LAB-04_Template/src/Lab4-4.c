@@ -11,20 +11,16 @@ ADC_HandleTypeDef adc1;
 
 void configureADC();
 
-int adc_val = 0;
-int adc_prev1 = 0;
-int adc_prev2 = 0;
+double adc_val = 0;
+double adc_prev1 = 0;
+double adc_prev2 = 0;
 
-float c1 = 0.3125;
-float c2 = 0.240385;
-float c3 = 0.3125;
-float c4 = 0.296875;
+double c1 = 0.3125;
+double c2 = 0.240385;
+double c3 = 0.3125;
+double c4 = 0.296875;
 
-float x1; //  Intermediate value
-float x2; //  Intermediate value
-float x3; //  Intermediate value
-
-float yk; // Result after filter
+double y = 0; // Result after filter
 
 int main(void){
 	Sys_Init();
@@ -37,21 +33,23 @@ int main(void){
 		HAL_ADC_PollForConversion(&adc1, HAL_MAX_DELAY);
 		adc_val = HAL_ADC_GetValue(&adc1);
 
-		asm("VMUL %[out],%[in1],%[in2]"
-		:[out] "=r" (x1)
-		:[in1] "r" (adc_val),[in2] "r" (c1));
+		asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (adc_val),[in2] "w" (c1));
 
-		asm("VMLA %[out],%[in1],%[in2],%[in3]"
-		:[out] "=r" (x2)
-		:[in1] "r" (adc_prev1),[in2] "r" (c2),[in3] "r" (x1));
 
-		asm("VMLA %[out],%[in1],%[in2],%[in3]"
-		:[out] "=r" (x3)
-		:[in1] "r" (adc_prev2),[in2] "r" (c3),[in3] "r" (x2));
+		asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (adc_prev1),[in2] "w" (c2));
 
-		asm("VMLA %[out],%[in1],%[in2],%[in3]"
-		:[out] "=r" (yk)
-		:[in1] "r" (adc_prev1),[in2] "r" (c4),[in3] "r" (x3));
+		asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (adc_prev2),[in2] "w" (c3));
+
+		asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (adc_prev1),[in2] "w" (c4));
+
 
 		adc_prev2 = adc_prev1;
 		adc_prev1 = adc_val;
