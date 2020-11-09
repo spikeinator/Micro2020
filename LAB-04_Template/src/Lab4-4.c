@@ -8,53 +8,60 @@
 #include "init.h"
 
 ADC_HandleTypeDef adc1;
-
+DAC_HandleTypeDef hdac;
 void configureADC();
+void configureDAC();
 
-int adc_val = 0;
-int adc_prev1 = 0;
-int adc_prev2 = 0;
+double adc_val = 0;
+double adc_prev1 = 0;
+double adc_prev2 = 0;
+double y_prev = 0;
 
-float c1 = 0.3125;
-float c2 = 0.240385;
-float c3 = 0.3125;
-float c4 = 0.296875;
+double c1 = 0.3125;
+double c2 = 0.240385;
+double c3 = 0.3125;
+double c4 = 0.296875;
 
-float x1; //  Intermediate value
-float x2; //  Intermediate value
-float x3; //  Intermediate value
-
-float yk; // Result after filter
+double y =0;
+double y_c=0;
 
 int main(void){
 	Sys_Init();
 	configureADC();
-
+	configureDAC();
 	HAL_ADC_Start(&adc1);
+	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 	printf("\033[2J\033[;H"); // Erase screen & move cursor to home position
 
 	while(1){
-		HAL_ADC_PollForConversion(&adc1, HAL_MAX_DELAY);
+		HAL_ADC_PollForConversion(&adc1, 10);
 		adc_val = HAL_ADC_GetValue(&adc1);
 
-		asm("VMUL %[out],%[in1],%[in2]"
-		:[out] "=r" (x1)
-		:[in1] "r" (adc_val),[in2] "r" (c1));
+		/*asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (adc_val),[in2] "w" (c1));
 
-		asm("VMLA %[out],%[in1],%[in2],%[in3]"
-		:[out] "=r" (x2)
-		:[in1] "r" (adc_prev1),[in2] "r" (c2),[in3] "r" (x1));
 
-		asm("VMLA %[out],%[in1],%[in2],%[in3]"
-		:[out] "=r" (x3)
-		:[in1] "r" (adc_prev2),[in2] "r" (c3),[in3] "r" (x2));
+		asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (adc_prev1),[in2] "w" (c2));
 
-		asm("VMLA %[out],%[in1],%[in2],%[in3]"
-		:[out] "=r" (yk)
-		:[in1] "r" (adc_prev1),[in2] "r" (c4),[in3] "r" (x3));
+		asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (adc_prev2),[in2] "w" (c3));
 
+		asm volatile("VMLA.F64 %P[out],%P[in1],%P[in2]"
+		:[out] "+w" (y)
+		:[in1] "w" (y_prev),[in2] "w" (c4));*/
+
+
+		y_c = c1*adc_val + c2*adc_prev1 + c3*adc_prev2 + c4*y_prev;
+		//printf("%f\r\n",adc_val);
+		HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)y_c);
 		adc_prev2 = adc_prev1;
 		adc_prev1 = adc_val;
+		y_prev=y_c;
+		//HAL_Delay(1);
 	}
 }
 
@@ -82,11 +89,35 @@ void configureADC()
 	// Configure the ADC channel
 	sConfig.Channel = ADC_CHANNEL_12;
 	sConfig.Rank = 1;
-	sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+	sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
 
 	HAL_ADC_ConfigChannel(&adc1,&sConfig);
 }
 
+void configureDAC(){
+	__HAL_RCC_DAC_CLK_ENABLE();
+
+	DAC_ChannelConfTypeDef dacConfig;
+
+	hdac.Instance=DAC;
+	HAL_DAC_Init(&hdac);
+	dacConfig.DAC_Trigger=DAC_TRIGGER_NONE;
+	dacConfig.DAC_OutputBuffer=DAC_OUTPUTBUFFER_DISABLE;
+	HAL_DAC_ConfigChannel(&hdac, &dacConfig, DAC_CHANNEL_1);
+
+}
+void HAL_DAC_MspInit(DAC_HandleTypeDef *hdac){
+	GPIO_InitTypeDef pinconfig;
+	if (hdac->Instance == DAC1)
+	{
+		//Sets up DAC on GPIOA Pin 4
+		__GPIOA_CLK_ENABLE();
+	    pinconfig.Pin = GPIO_PIN_4;
+	    pinconfig.Mode = GPIO_MODE_ANALOG;
+	    pinconfig.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	    HAL_GPIO_Init(GPIOA,&pinconfig);
+	}
+}
 void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 {
 
