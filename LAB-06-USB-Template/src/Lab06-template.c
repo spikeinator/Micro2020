@@ -82,8 +82,8 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost){
 
 		//button = my_mouse->buttons[0];
 		//printf("%d\r\n",button);
-		printf("%d\r\n",change_x);
-		printf("%d\r\n",change_y);
+		printf("%d\r\n",x);
+		printf("%d\r\n",y);
 	}
 }
 
