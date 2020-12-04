@@ -20,8 +20,12 @@ HID_MOUSE_Info_TypeDef *my_mouse;
 int ready = 0;
 uint8_t output;
 int x;
+int prev_x = 0;
+int change_x;
 int y;
-int buttons[3];
+int change_y;
+int prev_y = 0;
+int button;
 int first = 1;
 
 
@@ -39,17 +43,12 @@ int main(void){
 	// Start USBH Driver
 	USBH_Start(&husbh);
 
-
-	HAL_NVIC_EnableIRQ(OTG_HS_EP1_IN_IRQn);
+	//HAL_NVIC_EnableIRQ(OTG_HS_EP1_IN_IRQn);
 
 	while(1){
 
 		USBH_Process(&husbh);
 		// Other stuff
-		if(ready && first){
-
-			first = 0;
-		}
 	}
 }
 
@@ -71,16 +70,21 @@ void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id) {
 
 }
 void USBH_HID_EventCallback(USBH_HandleTypeDef *phost){
-	if(ready && first){
+	if(ready == 1){
 		my_mouse = USBH_HID_GetMouseInfo(&husbh);
 		x = my_mouse->x;
 		y = my_mouse->y;
-		buttons = output.buttons[3];
-		printf("%d\r\n",x);
-		printf("%d\r\n",y);
-		first
+		//first = 5;
+		//change_x = x - prev_x;
+		//change_y = y - prev_y;
+		//prev_x = x;
+		//prev_y = y;
+
+		//button = my_mouse->buttons[0];
+		//printf("%d\r\n",button);
+		printf("%d\r\n",change_x);
+		printf("%d\r\n",change_y);
 	}
 }
-
 
 
