@@ -46,11 +46,13 @@ char currentstr[22]="Currently in the room";
 char prntchar[3];
 char backstr[13]="Back to main";
 char exitstr[5]="EXIT";
+char recent[13]="Recent times";
 
 //variables to track which frame is currently on display
 int leftframe=0;
 int rightframe=2;
 int currentframe=1;
+int nextframe=1;
 
 //Numbers to track
 int currentint=0;//current amount of people in the room
@@ -60,8 +62,11 @@ int totalint=0;//How many people have been in the room today
 //the bounds used to determine where the buttons are
 uint16_t xbound1[2]={0,0};
 uint16_t xbound2[2]={0,0};
+uint16_t xbound3[2]={0,0};
 uint16_t ybound1[2]={0,0};
 uint16_t ybound2[2]={0,0};
+uint16_t ybound3[2]={0,0};
+
 
 
 //-------------------------------------
@@ -89,10 +94,10 @@ int check_sensors = 1;
 int sensor_clear = 1;
 int check2 = 1;
 int people = 0;
-float entrance_times[5];
+int entrance_times[5][3];
 int num_entrance = 0;
 int num_leave = 0;
-float leave_times[5];
+int leave_times[5][3];
 int i;
 
 int read_delay;
@@ -194,14 +199,20 @@ int main(void)
  	   if((sensor_time1 < check_distance) && sensor_clear){
  		   //Record time and add to list of last 5 entrance times
  		   if(num_entrance < 5){
- 			   entrance_times[num_entrance] = time_running;
+ 			   entrance_times[num_entrance][0] = hours;
+ 			   entrance_times[num_entrance][1] = minutes;
+ 			   entrance_times[num_entrance][2] = seconds;
  			   num_entrance++;
  		   }
  		   else{
  			   for(i=0;i<4;i++){
- 				   entrance_times[i] = entrance_times[i+1];
+ 				   entrance_times[i][0] = entrance_times[i+1][0];
+ 				   entrance_times[i][1] = entrance_times[i+1][1];
+ 				   entrance_times[i][2] = entrance_times[i+1][2];
  			   }
- 			   entrance_times[4] = time_running;
+ 			   entrance_times[4][0] = hours;
+ 			   entrance_times[4][1] = minutes;
+ 			   entrance_times[4][2] = seconds;
  		   }
 
  		   currentint++; //Increment Number of people in the room
@@ -221,14 +232,21 @@ int main(void)
  	   if((sensor_time2 < check_distance) && sensor_clear){
  		   //Record time and add to list of last 5 entrance times
  		   if(num_leave < 5){
- 			   leave_times[num_leave] = time_running;
+ 			   leave_times[num_leave][0] = hours;
+ 			   leave_times[num_leave][1] = minutes;
+ 			   leave_times[num_leave][2] = seconds;
+
  			   num_leave++;
  		   }
  		   else{
  			   for(i=0;i<4;i++){
- 				   leave_times[i] = leave_times[i+1];
+ 				   leave_times[i][0] = leave_times[i+1][0];
+ 				   leave_times[i][1] = leave_times[i+1][1];
+ 				   leave_times[i][2] = leave_times[i+1][2];
  			   }
- 			   leave_times[4] = time_running;
+ 			   leave_times[4][0] = hours;
+ 			   leave_times[4][1] = minutes;
+ 			   leave_times[4][2] = seconds;
  		   }
  		   if(currentint == 0){
  			   currentint = 0;
@@ -238,7 +256,7 @@ int main(void)
  		   }
 
  		   draw(currentframe);
- 		  clear_delay = 0;
+ 		   clear_delay = 0;
  		   sensor_clear = 0;
  		   //HAL_Delay(2000); //Wait for 2 seconds so person can move
  	   }
@@ -263,6 +281,12 @@ int main(void)
         		draw(rightframe);
 
         	}
+        	else if(((screen.touchX[0]>xbound3[0])&&(screen.touchX[0]<xbound3[1]))&&((screen.touchY[0]>ybound3[0])&&(screen.touchY[0]<ybound3[1]))){//did the user hit the middle button
+        		draw(nextframe);
+
+        	}
+
+
 
         	//reset variables
         	screen.touchDetected=0;
@@ -281,12 +305,32 @@ int main(void)
 void draw(int frame){
     //clear the screen
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
+	char hr[3];
+	char min[3];
+	char sec[3];
+	uint16_t timey=0;
+
 	//Draw the Exit button
     BSP_LCD_SetTextColor(LCD_COLOR_RED);//Text color = fill color for buttons
     BSP_LCD_FillRect(0, 0, 100, 80);//draw the button
     BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
     BSP_LCD_SetBackColor(LCD_COLOR_RED);//reformat text
     BSP_LCD_DisplayStringAt(14,28, (uint8_t *)exitstr, mode);// label button
+
+    BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+    BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+
+	itoa(hours,hr,10);
+	itoa(minutes,min,10);
+	itoa(seconds,sec,10);
+    BSP_LCD_DisplayStringAt(640,timey, (uint8_t *)hr, mode);
+    BSP_LCD_DisplayChar(680, timey, 58);
+    BSP_LCD_DisplayStringAt(700,timey, (uint8_t *)min, mode);
+    BSP_LCD_DisplayChar(740, timey, 58);
+    BSP_LCD_DisplayStringAt(760,timey, (uint8_t *)sec, mode);
+    timey=136;
+
+
     if(frame==0){//draws the "total today" screen
 
     	//the three common frams (0,1 & 2) follow the same layout with minor differences in where buttons are placed and what data is displayed
@@ -306,13 +350,19 @@ void draw(int frame){
         xbound1[1]=0;
         ybound1[0]=0;
         ybound1[1]=0;
+
         xbound2[0]=580;
         xbound2[1]=800;
         ybound2[0]=320;
         ybound2[1]=480;
 
+        xbound3[0]=0;
+        xbound3[1]=0;
+        ybound3[0]=0;
+        ybound3[1]=0;
+
         //track what frame you are on and what possible frames are next
-        leftframe=3; //there is no frame 3 so nothing will change
+        leftframe=5; //there is no frame 3 so nothing will change
         rightframe=1;
         currentframe=0;
 
@@ -325,9 +375,12 @@ void draw(int frame){
         BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
     	BSP_LCD_FillRect(0, 320, 220, 160);
         BSP_LCD_FillRect(580, 320, 220, 160);
+        BSP_LCD_FillRect(290, 320, 220, 160);
         BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
         BSP_LCD_DisplayStringAt(2,388, (uint8_t *)totalstr, mode);
         BSP_LCD_DisplayStringAt(630,388, (uint8_t *)maxstr, mode);
+        BSP_LCD_DisplayStringAt(300,388, (uint8_t *)recent, mode);
+
         BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
         BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
         BSP_LCD_DisplayStringAt(211,136, (uint8_t *)currentstr, mode);
@@ -342,9 +395,15 @@ void draw(int frame){
         xbound2[1]=800;
         ybound2[0]=320;
         ybound2[1]=480;
+        xbound3[0]=290;
+        xbound3[1]=510;
+        ybound3[0]=320;
+        ybound3[1]=480;
+
         leftframe=0;
         rightframe=2;
         currentframe=1;
+        nextframe=3;
     }
     else if (frame ==2){//draws the "total of the day"  frame
 
@@ -364,13 +423,79 @@ void draw(int frame){
         xbound1[1]=220;
         ybound1[0]=320;
         ybound1[1]=480;
+
         xbound2[0]=0;
         xbound2[1]=0;
         ybound2[0]=0;
         ybound2[1]=0;
+
+        xbound3[0]=0;
+        xbound3[1]=0;
+        ybound3[0]=0;
+        ybound3[1]=0;
+
         leftframe=1;
-        rightframe=3;
+        rightframe=5;
         currentframe=2;
+    }
+    else if (frame==3){
+
+    	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+        BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
+        BSP_LCD_FillRect(290, 320, 220, 160);
+        BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+        BSP_LCD_DisplayStringAt(300,388, (uint8_t *)backstr, mode);
+        BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+        BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+        BSP_LCD_DisplayStringAt(300,50, (uint8_t *)recent, mode);
+        char entr[8]="Entered";
+        char lft[5]="Left";
+        BSP_LCD_DisplayStringAt(10,timey, (uint8_t *)entr, mode);
+        BSP_LCD_DisplayStringAt(700,timey, (uint8_t *)lft, mode);
+        timey=timey+30;
+
+
+        for(i=0;i<5;i++){
+        	itoa(entrance_times[i][0],hr,10);
+        	itoa(entrance_times[i][1],min,10);
+        	itoa(entrance_times[i][2],sec,10);
+            BSP_LCD_DisplayStringAt(10,timey, (uint8_t *)hr, mode);
+            BSP_LCD_DisplayChar(50, timey, 58);
+            BSP_LCD_DisplayStringAt(70,timey, (uint8_t *)min, mode);
+            BSP_LCD_DisplayChar(110, timey, 58);
+            BSP_LCD_DisplayStringAt(130,timey, (uint8_t *)sec, mode);
+
+        	itoa(leave_times[i][0],hr,10);
+        	itoa(leave_times[i][1],min,10);
+        	itoa(leave_times[i][2],sec,10);
+            BSP_LCD_DisplayStringAt(640,timey, (uint8_t *)hr, mode);
+            BSP_LCD_DisplayChar(680, timey, 58);
+            BSP_LCD_DisplayStringAt(700,timey, (uint8_t *)min, mode);
+            BSP_LCD_DisplayChar(740, timey, 58);
+            BSP_LCD_DisplayStringAt(760,timey, (uint8_t *)sec, mode);
+
+            timey=timey+30;
+        }
+        xbound1[0]=0;
+        xbound1[1]=0;
+        ybound1[0]=0;
+        ybound1[1]=0;
+
+        xbound2[0]=0;
+        xbound2[1]=0;
+        ybound2[0]=0;
+        ybound2[1]=0;
+
+        xbound3[0]=290;
+        xbound3[1]=510;
+        ybound3[0]=320;
+        ybound3[1]=480;
+
+        nextframe=1;
+        leftframe=5;
+        rightframe=5;
+        currentframe=3;
+
     }
     else if (frame==10){//this is the "EXIT" frame
         //this is mean to be the last thing displayed on the screen as it is the end of the program
@@ -473,7 +598,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		trigger2++;
 		trigger_time++;
 		if(trigger_time >= 1000000){
-			time_running = time_running + 0.001;
+			//time_running = time_running + 0.001;
+			time_running++;
 			seconds++;
 			trigger_time = 0;
 			if(seconds > 59){
